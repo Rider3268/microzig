@@ -13,6 +13,8 @@ pub fn build(b: *Build) !void {
         .iconv = false,
     });
 
+    const libxml2_artifact = libxml2_dep.artifact("xml");
+
     const sqlite3_dep = b.dependency("sqlite3", .{
         .target = target,
         .optimize = .ReleaseSafe,
@@ -33,6 +35,12 @@ pub fn build(b: *Build) !void {
         .optimize = optimize,
     });
 
+
+    // FIX: Expose headers and static library directly to the XML module
+    xml_module.addIncludePath(libxml2_dep.path("include"));
+    xml_module.linkLibrary(libxml2_artifact);
+
+
     const regz_module = b.addModule("regz", .{
         .root_source_file = b.path("src/module.zig"),
         .target = target,
@@ -48,7 +56,7 @@ pub fn build(b: *Build) !void {
             },
         },
     });
-    regz_module.linkLibrary(libxml2_dep.artifact("xml"));
+    regz_module.linkLibrary(libxml2_artifact);
 
     const regz = b.addExecutable(.{
         .name = "regz",
